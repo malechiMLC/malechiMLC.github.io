@@ -1,0 +1,229 @@
+<!doctype html><html lang=zh-hans><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta http-equiv=x-ua-compatible content="IE=edge"><meta name=generator content="Source Themes Academic 4.8.0"><meta name=author content="malechi"><meta name=description content="new 操作的实现原理 使用原型链进行继承 instanceof 操作符、isProtot"><link rel=alternate hreflang=zh-hans href=/zh/post/js-inherit/><meta name=theme-color content="rgb(255, 199, 208)"><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/academicons/1.8.6/css/academicons.min.css integrity="sha256-uFVgMKfistnJAfoCUQigIl+JfUaP47GrRKjf6CTPVmw=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.12.0-1/css/all.min.css integrity="sha256-4w9DunooKSr3MFXHXWyFER38WmPdm361bQS/2KUWZbU=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.css integrity="sha256-Vzbj7sDDS/woiFS3uNKo8eIuni59rjyNGtXfstRzStA=" crossorigin=anonymous><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/github.min.css crossorigin=anonymous title=hl-light><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/styles/dracula.min.css crossorigin=anonymous title=hl-dark disabled><link rel=stylesheet href=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.css integrity="sha256-SHMGCYmST46SoyGgo4YR/9AlK1vf3ff84Aq9yK4hdqM=" crossorigin=anonymous><script src=https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.1.2/lazysizes.min.js integrity="sha256-Md1qLToewPeKjfAHU1zyPwOutccPAm5tahnaw7Osw0A=" crossorigin=anonymous async></script><link rel=stylesheet href="https://fonts.googleapis.com/css?family=family=Noto+Sans+SC&display=swap"><link rel=stylesheet href=/css/academic.css><link rel=manifest href=/zh/index.webmanifest><link rel=icon type=image/png href=/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_32x32_fill_lanczos_center_2.png><link rel=apple-touch-icon type=image/png href=/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_192x192_fill_lanczos_center_2.png><link rel=canonical href=/zh/post/js-inherit/><meta property="twitter:card" content="summary"><meta property="og:site_name" content="MLC NOTES"><meta property="og:url" content="/zh/post/js-inherit/"><meta property="og:title" content="JS 继承方法详解 | MLC NOTES"><meta property="og:description" content="new 操作的实现原理 使用原型链进行继承 instanceof 操作符、isProtot"><meta property="og:image" content="/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png"><meta property="twitter:image" content="/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png"><meta property="og:locale" content="zh-Hans"><meta property="article:published_time" content="2020-04-25T21:22:22+08:00"><meta property="article:modified_time" content="2020-04-25T21:22:22+08:00"><script type=application/ld+json>{"@context":"https://schema.org","@type":"BlogPosting","mainEntityOfPage":{"@type":"WebPage","@id":"/zh/post/js-inherit/"},"headline":"JS 继承方法详解","datePublished":"2020-04-25T21:22:22+08:00","dateModified":"2020-04-25T21:22:22+08:00","author":{"@type":"Person","name":"malechi"},"publisher":{"@type":"Organization","name":"MLC NOTES","logo":{"@type":"ImageObject","url":"/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_192x192_fill_lanczos_center_2.png"}},"description":"new 操作的实现原理 使用原型链进行继承 instanceof 操作符、isProtot"}</script><title>JS 继承方法详解 | MLC NOTES</title></head><body id=top data-spy=scroll data-offset=70 data-target=#TableOfContents><aside class=search-results id=search><div class=container><section class=search-header><div class="row no-gutters justify-content-between mb-3"><div class=col-6><h1>搜索</h1></div><div class="col-6 col-search-close"><a class=js-search href=#><i class="fas fa-times-circle text-muted" aria-hidden=true></i></a></div></div><div id=search-box><input name=q id=search-query placeholder=搜索... autocapitalize=off autocomplete=off autocorrect=off spellcheck=false type=search></div></section><section class=section-search-results><div id=search-hits></div></section></div></aside><nav class="navbar navbar-expand-lg navbar-light compensate-for-scrollbar" id=navbar-main><div class=container><div class="d-none d-lg-inline-flex"><a class=navbar-brand href=/zh>MLC NOTES</a></div><button type=button class=navbar-toggler data-toggle=collapse data-target=#navbar-content aria-controls=navbar aria-expanded=false aria-label=切换导航>
+<span><i class="fas fa-bars"></i></span></button><div class="navbar-brand-mobile-wrapper d-inline-flex d-lg-none"><a class=navbar-brand href=/zh>MLC NOTES</a></div><div class="navbar-collapse main-menu-item collapse justify-content-start" id=navbar-content><ul class="navbar-nav d-md-inline-flex"><li class=nav-item><a class=nav-link href=/zh/#featured><span>置顶文章</span></a></li><li class=nav-item><a class=nav-link href=/zh/#posts><span>最新发布</span></a></li><li class=nav-item><a class=nav-link href=/zh/#about><span>关于</span></a></li></ul></div><ul class="nav-icons navbar-nav flex-row ml-auto d-flex pl-md-2"><li class=nav-item><a class="nav-link js-search" href=#><i class="fas fa-search" aria-hidden=true></i></a></li><li class="nav-item dropdown theme-dropdown"><a href=# class="nav-link js-theme-selector" data-toggle=dropdown aria-haspopup=true><i class="fas fa-palette" aria-hidden=true></i></a><div class=dropdown-menu><a href=# class="dropdown-item js-set-theme-light"><span>Light</span></a>
+<a href=# class="dropdown-item js-set-theme-dark"><span>Dark</span></a>
+<a href=# class="dropdown-item js-set-theme-auto"><span>Automatic</span></a></div></li></ul></div></nav><article class=article><div class="article-container pt-3"><h1>JS 继承方法详解</h1><div class=article-metadata><span class=article-date>2020-04-25</span>
+<span class=middot-divider></span><span class=article-categories><i class="fas fa-folder mr-1"></i><a href>JavaScript进阶之路</a></span></div></div><div class=article-container><div class=article-style><ul><li><a href=#new-%e6%93%8d%e4%bd%9c%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86>new 操作的实现原理</a></li><li><a href=#%e4%bd%bf%e7%94%a8%e5%8e%9f%e5%9e%8b%e9%93%be%e8%bf%9b%e8%a1%8c%e7%bb%a7%e6%89%bf>使用原型链进行继承</a><ul><li><a href=#instanceof-%e6%93%8d%e4%bd%9c%e7%ac%a6isprototypeof-%e6%96%b9%e6%b3%95>instanceof 操作符、isPrototypeOf() 方法</a></li><li><a href=#%e9%97%ae%e9%a2%98>问题</a></li></ul></li><li><a href=#%e5%80%9f%e7%94%a8%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0>借用构造函数</a><ul><li><a href=#%e9%97%ae%e9%a2%98-1>问题</a></li></ul></li><li><a href=#%e7%bb%84%e5%90%88%e7%bb%a7%e6%89%bf>组合继承</a><ul><li><a href=#%e4%b8%8d%e8%b6%b3%e4%bc%9a%e8%b0%83%e7%94%a8%e4%b8%a4%e6%ac%a1%e8%b6%85%e7%b1%bb%e5%9e%8b%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0>不足：会调用两次超类型构造函数</a></li></ul></li><li><a href=#%e5%8e%9f%e5%9e%8b%e5%bc%8f%e7%bb%a7%e6%89%bf>原型式继承</a></li><li><a href=#%e5%af%84%e7%94%9f%e5%bc%8f%e7%bb%a7%e6%89%bf>寄生式继承</a></li><li><a href=#%e5%af%84%e7%94%9f%e7%bb%84%e5%90%88%e5%bc%8f%e7%bb%a7%e6%89%bf>寄生组合式继承</a></li></ul><h2 id=new-操作的实现原理>new 操作的实现原理</h2><p>以 SuperType 构造函数和 obj 实例为例。</p><p>首先明确 new 操作符的预期结果：</p><ul><li><code>obj</code> 具有 <code>SuperType</code> 所有的实例属性、方法和原型属性、方法</li><li><code>obj.constructor === SuperType</code>, 返回 true</li><li><code>obj.__proto__ == SuperType.prototype</code>, 返回 true</li><li><code>obj</code> 上的原型方法与 <code>SuperType</code> 原型上的同一方法在内存上应该一致</li><li><code>new</code> 操作最后返回了一个对象</li><li><code>obj instanceof SuperType</code>, 返回 true</li></ul><p>先给出 SuperType 构造函数的定义：</p><pre><code class=language-javascript>function SuperType() {
+    this.prop = true;
+    this.func = function () {};
+}
+
+SuperType.prototype.protofunc = function () {};
+</code></pre><p>验证上述几个 new 操作符的预期结果是否正确：</p><pre><code class=language-javascript>var obj1 = new SuperType();
+
+console.log(obj1.constructor === SuperType); // true
+console.log(obj1.__proto__ == SuperType.prototype); // true
+console.log(obj1.protofunc === SuperType.prototype.protofunc); // true
+console.log(obj1 instanceof SuperType); // true
+</code></pre><p>返回结果都为 true，说明上述预期是正确的。</p><p>接下来，开始复现 new 操作符的实现过程。封装在函数<code>newinstance(Type)</code>中，其中，Type 为对象类型，即相当于<code>SuperType</code>。</p><pre><code class=language-javascript>function newinstance(Type) {
+    // 首先创建一个对象实例，该对象包括一个 __proto__ 属性，需要指向 Type.prototype
+    var o = {
+        __proto__: Type.prototype,
+    };
+
+    // 接着，对象实例 o 需要具有 Type 的所有实例属性和原型属性
+    // 即，在o对象实例上运行 Type 的构造函数，初始化 Type 的那些属性和方法
+    Type.apply(o);
+
+    // 最后，需要返回这个对象实例
+    return o;
+}
+</code></pre><p>对该复现进行验证，验证是否满足上述预期结果。</p><pre><code class=language-javascript>// 首先定义函数printAllProps()，用于输出所有可枚举的实例属性、原型属性
+// 不用console.log输出的原因见获得对象属性的方法的博文
+function printAllProps(obj) {
+    let array = [];
+    for (let prop in obj) {
+        array.push(prop);
+        // 如果要输出属性值，使用：
+        // array.push(prop + ':' + obj[prop])
+    }
+    console.log(array);
+}
+</code></pre><pre><code class=language-javascript>var obj = newinstance(SuperType);
+printAllProps(obj);
+</code></pre><p>输出<code>['prop', 'func', 'protofunc']</code>，说明已经满足具有所有实例属性、原型属性的预期。</p><pre><code class=language-javascript>console.log(obj.constructor === SuperType); // true
+console.log(obj.__proto__ == SuperType.prototype); // true
+console.log(obj.protofunc === SuperType.prototype.protofunc); // true
+console.log(obj instanceof SuperType); // true
+</code></pre><p>全部输出<code>true</code>，说明这一步也验证正确。</p><p>至此，new 操作符的重现已经完成。</p><h2 id=使用原型链进行继承>使用原型链进行继承</h2><p>继承是通过创建<code>SuperType</code>的实例，并将该实例赋给<code>SubType.prototype</code>实现的。</p><p>本质是重写原型对象，用另一个类型的实例所代替。</p><pre><code class=language-javascript>function SuperType() {
+    this.prop = true;
+    this.func = function () {};
+}
+
+SuperType.prototype.protofunc = function () {};
+
+function SubType() {
+    this.subprop = true;
+    this.subfunc = function () {};
+}
+
+SubType.prototype = new SuperType(); // !important
+
+var subobj = new SubType();
+</code></pre><p>上述代码中，<code>SubType.prototype = new SuperType()</code> 给 SubType 换了一个新的原型，因为是直接重写的。<code>SubType.prototype</code>指向的是这个新<code>new</code>出来的对象。因此最终结果为，<code>subobj</code> 中有一个指向<code>SubType.prototype</code>的指针，<code>SubType.prototype</code>中有一个指向<code>SuperType.prototype</code>的指针。</p><div style=text-align:center><img src=https://s1.ax1x.com/2020/04/26/JcGKd1.png width=700px></div><p><strong>使用原型链实现继承时，在继承类型中，不能使用对象字面量创建原型方法或属性。</strong></p><p>例如，不能使用以下字面量添加新方法。本质问题是错误地将原型对象重写替换成了另一个对象字面量。</p><pre><code class=language-javascript>SubType.prototype = new SuperType();
+
+// 错误方法
+// SubType.prototype = {
+//     newfunc: function () {},
+// };
+
+// 正确方法
+SubType.prototype.newfunc = function () {};
+</code></pre><h3 id=instanceof-操作符isprototypeof-方法>instanceof 操作符、isPrototypeOf() 方法</h3><p><strong>所有引用类型都默认继承了 Object。</strong></p><p><code>instanceof</code></p><p>只要这个构造函数在实例的原型链中出现过，就返回 true。</p><pre><code class=language-javascript>console.log(subobj instanceof SubType); // true
+console.log(subobj instanceof SuperType); // true
+console.log(subobj instanceof Object); // true
+</code></pre><p><code>isPrototypeOf()</code></p><p>只要是在原型链中出现过的原型，都可以算作该原型链所派生的实例的原型，返回 true。</p><pre><code class=language-javascript>console.log(SubType.prototype.isPrototypeOf(subobj)); // true
+console.log(SuperType.prototype.isPrototypeOf(subobj)); // true
+console.log(Object.prototype.isPrototypeOf(subobj)); // true
+</code></pre><h3 id=问题>问题</h3><p>问题一：对于<strong>包含引用类型值</strong>的子类型原型，即超类型实例属性、原型属性中包含引用类型的时候，子类型对象公用这些引用类型内存，<strong>对引用类型值的更改会反映在所有对象上。</strong></p><p>问题二：创建子类型对象时，不能在不影响所有对象实例的情况下向超类型构造函数传递参数。</p><h2 id=借用构造函数>借用构造函数</h2><p>也称<strong>伪造对象继承</strong>或<strong>经典继承</strong>。</p><p>本质是，在子类型构造函数内部调用超类型构造函数，同时使用<code>call()</code>和<code>apply()</code>方法在新创建的子类型对象上执行构造函数。</p><p>可以解决使用原型链实现继承的问题一和问题二。</p><pre><code class=language-javascript>function SuperType(supername) {
+    this.name = supername;
+    this.arrays = [&quot;1&quot;, &quot;2&quot;];
+    this.func = function () {};
+}
+
+function SubType(subname, supername) {
+    SuperType.call(this, supername); // !important
+    // 为了确保SuperType构造函数不会重写子类型的属性
+    // 应先调用超类型构造函数，再进行子类型属性定义
+    this.subname = subname;
+}
+
+var subobj1 = new SubType(&quot;sub&quot;, &quot;super&quot;);
+
+subobj1.arrays.push(&quot;3&quot;);
+
+var subobj2 = new SubType(&quot;sub&quot;, &quot;super&quot;);
+var superobj = new SuperType(&quot;super&quot;);
+</code></pre><p>使用可以输出可枚举属性名、属性值的<code>printAllProps()</code>函数，验证对引用类型值的更改是否影响到了所有对象实例。</p><pre><code class=language-javascript>printAllProps(subobj1);
+// [ 'subname:sub', 'name:super', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(subobj2);
+// [ 'subname:sub', 'name:super', 'arrays:1,2', 'func:function () {}' ]
+printAllProps(superobj);
+// [ 'name:super', 'arrays:1,2', 'func:function () {}']
+</code></pre><p>原因： 使用<code>call()</code>方法，即在新要创建的子类型对象上<strong>执行了<code>SuperType()</code>函数中定义的对象初始化代码</strong>，每个<code>SubType</code>类型实例都具有自己的<code>arrays</code>副本。</p><p>但这同时也带来了借用构造函数继承的问题。</p><h3 id=问题-1>问题</h3><ul><li>方法都在构造函数中定义，无法进行函数复用。</li></ul><pre><code class=language-javascript>console.log(subobj1.func === subobj2.func); // false
+</code></pre><ul><li>在超类型原型中定义的方法，对子类型是不可见的。</li></ul><p>如果给<code>SuperType</code>类型添加原型函数<code>protofunc()</code>如下：</p><pre><code class=language-javascript>SuperType.prototype.protofunc = function () {};
+</code></pre><p>在<code>SubType</code>对象实例<code>subobj1</code>、<code>subobj2</code>中将不会包含这个超类型的原型方法，<code>printAllProps()</code>结果将如下：</p><pre><code class=language-javascript>printAllProps(subobj1); // [ 'subname:sub', 'name:super', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(subobj2); // [ 'subname:sub', 'name:super', 'arrays:1,2', 'func:function () {}' ]
+printAllProps(superobj); // [ 'name:super', 'arrays:1,2', 'func:function () {}', 'protofunc:function () {}']
+</code></pre><p>可以看到，只有<code>superobj</code>中包含了该方法。原因：注意上一段中的<strong>加粗字体：执行了<code>SuperType()</code>函数中定义的对象初始化代码</strong>——原型上的属性方法不是定义在<code>SuperType()</code>构造函数中的，构造函数中仅包含实例属性方法,因此子类型<code>SubType</code>的实例中将只会初始化这些实例属性方法。</p><p>导致的结果是，所有类型都只能使用构造函数模式。因此借用构造函数很少单独使用。</p><h2 id=组合继承>组合继承</h2><p>也称<strong>伪经典继承</strong>, 将原型链和借用构造函数组合在一起，融合了二者的优点：</p><ul><li>使用借用构造函数实现对实例属性的继承</li><li>使用原型链实现对原型属性的继承</li></ul><pre><code class=language-javascript>// 定义超类型的实例属性方法
+function SuperType(supername) {
+    this.name = supername;
+    this.arrays = [&quot;1&quot;, &quot;2&quot;];
+}
+
+// 定义超类型的原型属性方法
+SuperType.prototype.protofunc = function () {};
+SuperType.prototype.protonames = [&quot;a&quot;, &quot;b&quot;];
+
+// 子类型开始继承
+// 1. 使用借用构造函数实现对实例属性的继承
+function SubType(subname, supername) {
+    SuperType.call(this, supername); // !important
+
+    this.subname = subname;
+}
+
+// 2. 使用原型链实现对原型属性的继承
+SubType.prototype = new SuperType(); // !important
+SubType.prototype.constructor = SubType; // !important
+
+// 创建子类型对象实例
+var subobj1 = new SubType(&quot;sub&quot;, &quot;super&quot;);
+var subobj2 = new SubType(&quot;sub&quot;, &quot;super&quot;);
+</code></pre><p>虽然组合继承目前被使用得很多，但仍有不足。</p><h3 id=不足会调用两次超类型构造函数>不足：会调用两次超类型构造函数</h3><p>无论在什么情况下，使用组合继承都会调用两次超类型构造函数：第一次，在重写<code>SubType</code>的原型时；第二次，在子类型<code>SubType</code>构造函数内部。如下：</p><pre><code class=language-javascript>function SuperType(supername) {
+    this.name = supername;
+}
+
+function SubType(subname, supername) {
+    SuperType.call(this, supername); // 第二次调用
+
+    this.subname = subname;
+}
+
+SubType.prototype = new SuperType(); // 第一次调用
+SubType.prototype.constructor = SubType;
+
+var subobj1 = new SubType(&quot;sub&quot;, &quot;super&quot;); // 第二次调用入口
+</code></pre><p>实际过程如下：</p><ul><li>第一次调用时，<code>SubType.prototype</code>中会存在属性<code>name</code>，来自于<code>SuperType</code>的实例属性。</li><li>第二次调用时，子类型对象实例上会存在实例属性<code>name</code>、<code>subname</code>，由于实例属性会屏蔽原型属性中的同名属性，真实使用的是实例属性<code>name</code>，而原型属性<code>name</code>会被屏蔽。</li></ul><p>这也就是组合继承中效率较低的地方。解决方法见<strong>寄生组合式继承</strong>。</p><h2 id=原型式继承>原型式继承</h2><p>适用情况：只是想让一个对象与另一个对象保持类似的情况下，添加新的属性和方法。</p><p>不涉及到类型（<code>function</code>），从头到尾使用的都是对象（<code>var</code>）。</p><pre><code class=language-javascript>// 注意这是个对象，而不是类型构造函数
+// 使用字面量对象、对象实例都可以
+var obj = {
+    name: &quot;objname&quot;,
+    arrays: [&quot;1&quot;, &quot;2&quot;],
+    func: function () {},
+};
+
+// Object.create()方法的两种参数形式
+var anotherobj1 = Object.create(obj);
+var anotherobj2 = Object.create(obj, {
+    name: {
+        enumerable: true,
+        value: &quot;newname&quot;,
+    },
+});
+</code></pre><p><code>Object.create()</code>方法创建一个新对象，使用现有的对象来提供新创建的对象的<code>__proto__</code>。</p><p><code>Object.create()</code>方法有两种参数形式：</p><ul><li><p>第一个参数：一个作为新对象原型的对象</p></li><li><p>第二个参数（可选）：为新对象定义新属性的对象，形式与 <code>Object.defineProperties()</code>的第二个参数格式相同</p></li></ul><p>特别注意第二个参数中，属性<code>name</code>的那四种数据属性，如果没有指定<code>enumerable: true</code>，在使用<code>for..in</code>和<code>printAllProps</code>时，属性不会被枚举到。</p><p>修改<code>anotherobj1</code>的<code>arrays</code>的值，如下：</p><pre><code class=language-javascript>anotherobj1.arrays.push(&quot;3&quot;);
+
+printAllProps(anotherobj1); // [ 'name:objname', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(anotherobj2); // [ 'name:newname', 'arrays:1,2,3', 'func:function () {}' ]
+</code></pre><p>可以看到，使用原型式继承，同样也会存在使用原型链进行继承时的引用类型值的问题——包含引用类型值的属性始终会共享相应的值。</p><p>可通过以下代码验证：</p><pre><code class=language-javascript>console.log(anotherobj1.arrays === anotherobj2.arrays); // true
+console.log(anotherobj1.func === anotherobj2.func); // true```
+</code></pre><h2 id=寄生式继承>寄生式继承</h2><p>适用情况：在主要考虑的是对象，而不是自定义类型或构造函数时。</p><pre><code class=language-javascript>function createAnother(original) {
+    // 该Object()函数不是必须，任何返回一个对象的函数都可以
+    var clone = Object(original);
+
+    clone.newfunc = function () {};
+    return clone;
+}
+
+var original = {
+    name: &quot;originalName&quot;,
+};
+
+var another = createAnother(original);
+
+printAllProps(another); // [ 'name:originalName', 'newfunc:function () {}' ]
+</code></pre><p>缺点：与构造函数继承类似地，函数不能复用。</p><h2 id=寄生组合式继承>寄生组合式继承</h2><p>优点：高效率——弥补组合继承的不足，只调用一次超类型<code>SuperType</code>构造函数，避免了在子类型<code>SubType</code>的原型<code>prototype</code>上创建不必要的多余的属性和方法。</p><p>是目前引用类型最理想的继承范式。</p><p>本质：使用寄生式继承来继承超类型的原型（即只继承了超类型的原型属性，并没有在子类型原型上添加超类型实例属性），然后再将结果指定给子类型的原型。即，将组合继承中第一次调用超类型构造函数的地方进行了替换。</p><pre><code class=language-javascript>function SuperType(supername) {
+    this.name = supername;
+}
+
+SuperType.prototype.protofunc = function () {};
+
+function SubType(subname, supername) {
+    this.subname = subname;
+
+    SuperType.call(this, supername);
+}
+
+// 用以下方式替换组合继承中的第一次调用
+// 即，替换掉 SubType.prototype = new SuperType()
+
+// *************************************
+function inheritPrototype(subType, superType) {
+    var prototype = superType.prototype; // 创建原型对象
+    prototype.constructor = subType; // 增强对象
+    subType.prototype = prototype; // 指定原型对象
+}
+
+inheritPrototype(SubType, SuperType);
+// *************************************
+
+SubType.prototype.constructor = SubType;
+
+var subobj = new SubType(&quot;sub&quot;, &quot;super&quot;);
+
+printAllProps(subobj); // [ 'subname:sub', 'name:super', 'protofunc:function () {}' ]
+</code></pre><p>为创建的超类型原型副本<code>prototype</code>添加<code>constructor</code>属性的目的：弥补因重写而失去的默认的<code>constructor</code>属性，让<code>prototype</code>副本有正确的<code>constructor</code>属性指向。</p></div><div class=share-box aria-hidden=true><ul class=share><li><a href="https://twitter.com/intent/tweet?url=/zh/post/js-inherit/&text=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3" target=_blank rel=noopener class=share-btn-twitter><i class="fab fa-twitter"></i></a></li><li><a href="https://www.facebook.com/sharer.php?u=/zh/post/js-inherit/&t=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3" target=_blank rel=noopener class=share-btn-facebook><i class="fab fa-facebook"></i></a></li><li><a href="mailto:?subject=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3&body=/zh/post/js-inherit/" target=_blank rel=noopener class=share-btn-email><i class="fas fa-envelope"></i></a></li><li><a href="https://www.linkedin.com/shareArticle?url=/zh/post/js-inherit/&title=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3" target=_blank rel=noopener class=share-btn-linkedin><i class="fab fa-linkedin-in"></i></a></li><li><a href="https://web.whatsapp.com/send?text=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3%20/zh/post/js-inherit/" target=_blank rel=noopener class=share-btn-whatsapp><i class="fab fa-whatsapp"></i></a></li><li><a href="https://service.weibo.com/share/share.php?url=/zh/post/js-inherit/&title=JS%20%e7%bb%a7%e6%89%bf%e6%96%b9%e6%b3%95%e8%af%a6%e8%a7%a3" target=_blank rel=noopener class=share-btn-weibo><i class="fab fa-weibo"></i></a></li></ul></div><div class="media author-card content-widget-hr"><img class="avatar mr-3 avatar-circle" src=/zh/author/malechi/avatar_hu9e66641c43c4d7e2bf9023830fedb178_21955_270x270_fill_q90_lanczos_center.jpg alt=malechi><div class=media-body><h5 class=card-title><a href=/>malechi</a></h5><h6 class=card-subtitle>学生</h6><p class=card-text>有梦想，有追求，有吃的，有喝的，有玩的，有爱的</p><ul class=network-icon aria-hidden=true><li><a href=mailto:happy.malechi@gmail><i class="fas fa-envelope"></i></a></li><li><a href=https://https://twitter.com/malechi20 target=_blank rel=noopener><i class="fab fa-twitter"></i></a></li><li><a href=https://github.com/malechiMLC target=_blank rel=noopener><i class="fab fa-github"></i></a></li></ul></div></div></div></article><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.imagesloaded/4.1.4/imagesloaded.pkgd.min.js integrity="sha256-lqvxZrPLtfffUl2G/e7szqSvPBILGbwmsGE1MKlOi0Q=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/jquery.isotope/3.0.6/isotope.pkgd.min.js integrity="sha256-CBrpuqrMhXwcLLUd5tvQ4euBHCdh7wGlDfNz8vbu/iI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/fancybox/3.5.7/jquery.fancybox.min.js integrity="sha256-yt2kYMy0w8AbtF89WXb2P1rfjcP/HTHLT7097U8Y5b8=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/highlight.min.js integrity="sha256-eOgo0OtLL4cdq7RdwRUiGKLX9XsIJ7nGhWEKbohmVAQ=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.18.1/languages/r.min.js></script><script src=https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.5.1/leaflet.js integrity="sha256-EErZamuLefUnbMBQbsEqu1USa+btR2oIlCpBJbyD4/g=" crossorigin=anonymous></script><script>const code_highlighting=true;</script><script>const isSiteThemeDark=false;</script><script>const search_config={"indexURI":"/zh/index.json","minLength":1,"threshold":0.3};const i18n={"no_results":"没有找到结果","placeholder":"搜索...","results":"搜索结果"};const content_type={'post':"文章",'project':"项目",'publication':"出版物",'talk':"演讲"};</script><script id=search-hit-fuse-template type=text/x-template>
+      <div class="search-hit" id="summary-{{key}}">
+      <div class="search-hit-content">
+        <div class="search-hit-name">
+          <a href="{{relpermalink}}">{{title}}</a>
+          <div class="article-metadata search-hit-type">{{type}}</div>
+          <p class="search-hit-description">{{snippet}}</p>
+        </div>
+      </div>
+      </div>
+    </script><script src=https://cdnjs.cloudflare.com/ajax/libs/fuse.js/3.2.1/fuse.min.js integrity="sha256-VzgmKYmhsGNNN4Ph1kMW+BjoYJM2jV5i4IlFoeZA9XI=" crossorigin=anonymous></script><script src=https://cdnjs.cloudflare.com/ajax/libs/mark.js/8.11.1/jquery.mark.min.js integrity="sha256-4HLtjeVgH0eIB3aZ9mLYF6E8oU5chNdjU6p6rrXpl9U=" crossorigin=anonymous></script><script src=/js/academic.min.37431be2d92d7fb0160054761ab79602.js></script><div class=container><footer class=site-footer><p class=powered-by>© 2020 Ruiqi Ma &#183;
+Powered by the
+<a href=https://sourcethemes.com/academic/ target=_blank rel=noopener>Academic theme</a> for
+<a href=https://gohugo.io target=_blank rel=noopener>Hugo</a>.
+<span class=float-right aria-hidden=true><a href=# class=back-to-top><span class=button_icon><i class="fas fa-chevron-up fa-2x"></i></span></a></span></p></footer></div><div id=modal class="modal fade" role=dialog><div class=modal-dialog><div class=modal-content><div class=modal-header><h5 class=modal-title>引用</h5><button type=button class=close data-dismiss=modal aria-label=Close>
+<span aria-hidden=true>&#215;</span></button></div><div class=modal-body><pre><code class="tex hljs"></code></pre></div><div class=modal-footer><a class="btn btn-outline-primary my-1 js-copy-cite" href=# target=_blank><i class="fas fa-copy"></i>复制</a>
+<a class="btn btn-outline-primary my-1 js-download-cite" href=# target=_blank><i class="fas fa-download"></i>下载</a><div id=modal-error></div></div></div></div></div></body></html>
