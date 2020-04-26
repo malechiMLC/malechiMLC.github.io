@@ -1,1 +1,563 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC LIFE</title><link>/post/</link><atom:link href="/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/post/</link></image></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC NOTES</title><link>/post/</link><atom:link href="/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><lastBuildDate>Sat, 25 Apr 2020 21:22:22 +0800</lastBuildDate><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/post/</link></image><item><title>JS 继承方法详解</title><link>/post/js-inherit/</link><pubDate>Sat, 25 Apr 2020 21:22:22 +0800</pubDate><guid>/post/js-inherit/</guid><description>&lt;!-- TOC -->
+&lt;ul>
+&lt;li>
+&lt;a href="#new-%e6%93%8d%e4%bd%9c%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86">new 操作的实现原理&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e4%bd%bf%e7%94%a8%e5%8e%9f%e5%9e%8b%e9%93%be%e8%bf%9b%e8%a1%8c%e7%bb%a7%e6%89%bf">使用原型链进行继承&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#instanceof-%e6%93%8d%e4%bd%9c%e7%ac%a6isprototypeof-%e6%96%b9%e6%b3%95">instanceof 操作符、isPrototypeOf() 方法&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e9%97%ae%e9%a2%98">问题&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;a href="#%e5%80%9f%e7%94%a8%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0">借用构造函数&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e9%97%ae%e9%a2%98-1">问题&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;a href="#%e7%bb%84%e5%90%88%e7%bb%a7%e6%89%bf">组合继承&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e4%b8%8d%e8%b6%b3%e4%bc%9a%e8%b0%83%e7%94%a8%e4%b8%a4%e6%ac%a1%e8%b6%85%e7%b1%bb%e5%9e%8b%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0">不足：会调用两次超类型构造函数&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;a href="#%e5%8e%9f%e5%9e%8b%e5%bc%8f%e7%bb%a7%e6%89%bf">原型式继承&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%af%84%e7%94%9f%e5%bc%8f%e7%bb%a7%e6%89%bf">寄生式继承&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%af%84%e7%94%9f%e7%bb%84%e5%90%88%e5%bc%8f%e7%bb%a7%e6%89%bf">寄生组合式继承&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;!-- /TOC -->
+&lt;h2 id="new-操作的实现原理">new 操作的实现原理&lt;/h2>
+&lt;p>以 SuperType 构造函数和 obj 实例为例。&lt;/p>
+&lt;p>首先明确 new 操作符的预期结果：&lt;/p>
+&lt;ul>
+&lt;li>&lt;code>obj&lt;/code> 具有 &lt;code>SuperType&lt;/code> 所有的实例属性、方法和原型属性、方法&lt;/li>
+&lt;li>&lt;code>obj.constructor === SuperType&lt;/code>, 返回 true&lt;/li>
+&lt;li>&lt;code>obj.__proto__ == SuperType.prototype&lt;/code>, 返回 true&lt;/li>
+&lt;li>&lt;code>obj&lt;/code> 上的原型方法与 &lt;code>SuperType&lt;/code> 原型上的同一方法在内存上应该一致&lt;/li>
+&lt;li>&lt;code>new&lt;/code> 操作最后返回了一个对象&lt;/li>
+&lt;li>&lt;code>obj instanceof SuperType&lt;/code>, 返回 true&lt;/li>
+&lt;/ul>
+&lt;p>先给出 SuperType 构造函数的定义：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function SuperType() {
+this.prop = true;
+this.func = function () {};
+}
+SuperType.prototype.protofunc = function () {};
+&lt;/code>&lt;/pre>
+&lt;p>验证上述几个 new 操作符的预期结果是否正确：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">var obj1 = new SuperType();
+console.log(obj1.constructor === SuperType); // true
+console.log(obj1.__proto__ == SuperType.prototype); // true
+console.log(obj1.protofunc === SuperType.prototype.protofunc); // true
+console.log(obj1 instanceof SuperType); // true
+&lt;/code>&lt;/pre>
+&lt;p>返回结果都为 true，说明上述预期是正确的。&lt;/p>
+&lt;p>接下来，开始复现 new 操作符的实现过程。封装在函数&lt;code>newinstance(Type)&lt;/code>中，其中，Type 为对象类型，即相当于&lt;code>SuperType&lt;/code>。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function newinstance(Type) {
+// 首先创建一个对象实例，该对象包括一个 __proto__ 属性，需要指向 Type.prototype
+var o = {
+__proto__: Type.prototype,
+};
+// 接着，对象实例 o 需要具有 Type 的所有实例属性和原型属性
+// 即，在o对象实例上运行 Type 的构造函数，初始化 Type 的那些属性和方法
+Type.apply(o);
+// 最后，需要返回这个对象实例
+return o;
+}
+&lt;/code>&lt;/pre>
+&lt;p>对该复现进行验证，验证是否满足上述预期结果。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">// 首先定义函数printAllProps()，用于输出所有可枚举的实例属性、原型属性
+// 不用console.log输出的原因见获得对象属性的方法的博文
+function printAllProps(obj) {
+let array = [];
+for (let prop in obj) {
+array.push(prop);
+// 如果要输出属性值，使用：
+// array.push(prop + ':' + obj[prop])
+}
+console.log(array);
+}
+&lt;/code>&lt;/pre>
+&lt;pre>&lt;code class="language-javascript">var obj = newinstance(SuperType);
+printAllProps(obj);
+&lt;/code>&lt;/pre>
+&lt;p>输出&lt;code>['prop', 'func', 'protofunc']&lt;/code>，说明已经满足具有所有实例属性、原型属性的预期。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">console.log(obj.constructor === SuperType); // true
+console.log(obj.__proto__ == SuperType.prototype); // true
+console.log(obj.protofunc === SuperType.prototype.protofunc); // true
+console.log(obj instanceof SuperType); // true
+&lt;/code>&lt;/pre>
+&lt;p>全部输出&lt;code>true&lt;/code>，说明这一步也验证正确。&lt;/p>
+&lt;p>至此，new 操作符的重现已经完成。&lt;/p>
+&lt;h2 id="使用原型链进行继承">使用原型链进行继承&lt;/h2>
+&lt;p>继承是通过创建&lt;code>SuperType&lt;/code>的实例，并将该实例赋给&lt;code>SubType.prototype&lt;/code>实现的。&lt;/p>
+&lt;p>本质是重写原型对象，用另一个类型的实例所代替。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function SuperType() {
+this.prop = true;
+this.func = function () {};
+}
+SuperType.prototype.protofunc = function () {};
+function SubType() {
+this.subprop = true;
+this.subfunc = function () {};
+}
+SubType.prototype = new SuperType(); // !important
+var subobj = new SubType();
+&lt;/code>&lt;/pre>
+&lt;p>上述代码中，&lt;code>SubType.prototype = new SuperType()&lt;/code> 给 SubType 换了一个新的原型，因为是直接重写的。&lt;code>SubType.prototype&lt;/code>指向的是这个新&lt;code>new&lt;/code>出来的对象。因此最终结果为，&lt;code>subobj&lt;/code> 中有一个指向&lt;code>SubType.prototype&lt;/code>的指针，&lt;code>SubType.prototype&lt;/code>中有一个指向&lt;code>SuperType.prototype&lt;/code>的指针。&lt;/p>
+&lt;div style="text-align: center;">
+&lt;img src="https://s1.ax1x.com/2020/04/26/JcGKd1.png" width="700px">
+&lt;/div>
+&lt;p>&lt;strong>使用原型链实现继承时，在继承类型中，不能使用对象字面量创建原型方法或属性。&lt;/strong>&lt;/p>
+&lt;p>例如，不能使用以下字面量添加新方法。本质问题是错误地将原型对象重写替换成了另一个对象字面量。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">SubType.prototype = new SuperType();
+// 错误方法
+// SubType.prototype = {
+// newfunc: function () {},
+// };
+// 正确方法
+SubType.prototype.newfunc = function () {};
+&lt;/code>&lt;/pre>
+&lt;h3 id="instanceof-操作符isprototypeof-方法">instanceof 操作符、isPrototypeOf() 方法&lt;/h3>
+&lt;p>&lt;strong>所有引用类型都默认继承了 Object。&lt;/strong>&lt;/p>
+&lt;p>&lt;code>instanceof&lt;/code>&lt;/p>
+&lt;p>只要这个构造函数在实例的原型链中出现过，就返回 true。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">console.log(subobj instanceof SubType); // true
+console.log(subobj instanceof SuperType); // true
+console.log(subobj instanceof Object); // true
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>isPrototypeOf()&lt;/code>&lt;/p>
+&lt;p>只要是在原型链中出现过的原型，都可以算作该原型链所派生的实例的原型，返回 true。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">console.log(SubType.prototype.isPrototypeOf(subobj)); // true
+console.log(SuperType.prototype.isPrototypeOf(subobj)); // true
+console.log(Object.prototype.isPrototypeOf(subobj)); // true
+&lt;/code>&lt;/pre>
+&lt;h3 id="问题">问题&lt;/h3>
+&lt;p>问题一：对于&lt;strong>包含引用类型值&lt;/strong>的子类型原型，即超类型实例属性、原型属性中包含引用类型的时候，子类型对象公用这些引用类型内存，&lt;strong>对引用类型值的更改会反映在所有对象上。&lt;/strong>&lt;/p>
+&lt;p>问题二：创建子类型对象时，不能在不影响所有对象实例的情况下向超类型构造函数传递参数。&lt;/p>
+&lt;h2 id="借用构造函数">借用构造函数&lt;/h2>
+&lt;p>也称&lt;strong>伪造对象继承&lt;/strong>或&lt;strong>经典继承&lt;/strong>。&lt;/p>
+&lt;p>本质是，在子类型构造函数内部调用超类型构造函数，同时使用&lt;code>call()&lt;/code>和&lt;code>apply()&lt;/code>方法在新创建的子类型对象上执行构造函数。&lt;/p>
+&lt;p>可以解决使用原型链实现继承的问题一和问题二。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function SuperType(supername) {
+this.name = supername;
+this.arrays = [&amp;quot;1&amp;quot;, &amp;quot;2&amp;quot;];
+this.func = function () {};
+}
+function SubType(subname, supername) {
+SuperType.call(this, supername); // !important
+// 为了确保SuperType构造函数不会重写子类型的属性
+// 应先调用超类型构造函数，再进行子类型属性定义
+this.subname = subname;
+}
+var subobj1 = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;);
+subobj1.arrays.push(&amp;quot;3&amp;quot;);
+var subobj2 = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;);
+var superobj = new SuperType(&amp;quot;super&amp;quot;);
+&lt;/code>&lt;/pre>
+&lt;p>使用可以输出可枚举属性名、属性值的&lt;code>printAllProps()&lt;/code>函数，验证对引用类型值的更改是否影响到了所有对象实例。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">printAllProps(subobj1);
+// [ 'subname:sub', 'name:super', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(subobj2);
+// [ 'subname:sub', 'name:super', 'arrays:1,2', 'func:function () {}' ]
+printAllProps(superobj);
+// [ 'name:super', 'arrays:1,2', 'func:function () {}']
+&lt;/code>&lt;/pre>
+&lt;p>原因： 使用&lt;code>call()&lt;/code>方法，即在新要创建的子类型对象上&lt;strong>执行了&lt;code>SuperType()&lt;/code>函数中定义的对象初始化代码&lt;/strong>，每个&lt;code>SubType&lt;/code>类型实例都具有自己的&lt;code>arrays&lt;/code>副本。&lt;/p>
+&lt;p>但这同时也带来了借用构造函数继承的问题。&lt;/p>
+&lt;h3 id="问题-1">问题&lt;/h3>
+&lt;ul>
+&lt;li>方法都在构造函数中定义，无法进行函数复用。&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">console.log(subobj1.func === subobj2.func); // false
+&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>在超类型原型中定义的方法，对子类型是不可见的。&lt;/li>
+&lt;/ul>
+&lt;p>如果给&lt;code>SuperType&lt;/code>类型添加原型函数&lt;code>protofunc()&lt;/code>如下：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">SuperType.prototype.protofunc = function () {};
+&lt;/code>&lt;/pre>
+&lt;p>在&lt;code>SubType&lt;/code>对象实例&lt;code>subobj1&lt;/code>、&lt;code>subobj2&lt;/code>中将不会包含这个超类型的原型方法，&lt;code>printAllProps()&lt;/code>结果将如下：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">printAllProps(subobj1); // [ 'subname:sub', 'name:super', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(subobj2); // [ 'subname:sub', 'name:super', 'arrays:1,2', 'func:function () {}' ]
+printAllProps(superobj); // [ 'name:super', 'arrays:1,2', 'func:function () {}', 'protofunc:function () {}']
+&lt;/code>&lt;/pre>
+&lt;p>可以看到，只有&lt;code>superobj&lt;/code>中包含了该方法。原因：注意上一段中的&lt;strong>加粗字体：执行了&lt;code>SuperType()&lt;/code>函数中定义的对象初始化代码&lt;/strong>——原型上的属性方法不是定义在&lt;code>SuperType()&lt;/code>构造函数中的，构造函数中仅包含实例属性方法,因此子类型&lt;code>SubType&lt;/code>的实例中将只会初始化这些实例属性方法。&lt;/p>
+&lt;p>导致的结果是，所有类型都只能使用构造函数模式。因此借用构造函数很少单独使用。&lt;/p>
+&lt;h2 id="组合继承">组合继承&lt;/h2>
+&lt;p>也称&lt;strong>伪经典继承&lt;/strong>, 将原型链和借用构造函数组合在一起，融合了二者的优点：&lt;/p>
+&lt;ul>
+&lt;li>使用借用构造函数实现对实例属性的继承&lt;/li>
+&lt;li>使用原型链实现对原型属性的继承&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">// 定义超类型的实例属性方法
+function SuperType(supername) {
+this.name = supername;
+this.arrays = [&amp;quot;1&amp;quot;, &amp;quot;2&amp;quot;];
+}
+// 定义超类型的原型属性方法
+SuperType.prototype.protofunc = function () {};
+SuperType.prototype.protonames = [&amp;quot;a&amp;quot;, &amp;quot;b&amp;quot;];
+// 子类型开始继承
+// 1. 使用借用构造函数实现对实例属性的继承
+function SubType(subname, supername) {
+SuperType.call(this, supername); // !important
+this.subname = subname;
+}
+// 2. 使用原型链实现对原型属性的继承
+SubType.prototype = new SuperType(); // !important
+SubType.prototype.constructor = SubType; // !important
+// 创建子类型对象实例
+var subobj1 = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;);
+var subobj2 = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;);
+&lt;/code>&lt;/pre>
+&lt;p>虽然组合继承目前被使用得很多，但仍有不足。&lt;/p>
+&lt;h3 id="不足会调用两次超类型构造函数">不足：会调用两次超类型构造函数&lt;/h3>
+&lt;p>无论在什么情况下，使用组合继承都会调用两次超类型构造函数：第一次，在重写&lt;code>SubType&lt;/code>的原型时；第二次，在子类型&lt;code>SubType&lt;/code>构造函数内部。如下：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function SuperType(supername) {
+this.name = supername;
+}
+function SubType(subname, supername) {
+SuperType.call(this, supername); // 第二次调用
+this.subname = subname;
+}
+SubType.prototype = new SuperType(); // 第一次调用
+SubType.prototype.constructor = SubType;
+var subobj1 = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;); // 第二次调用入口
+&lt;/code>&lt;/pre>
+&lt;p>实际过程如下：&lt;/p>
+&lt;ul>
+&lt;li>第一次调用时，&lt;code>SubType.prototype&lt;/code>中会存在属性&lt;code>name&lt;/code>，来自于&lt;code>SuperType&lt;/code>的实例属性。&lt;/li>
+&lt;li>第二次调用时，子类型对象实例上会存在实例属性&lt;code>name&lt;/code>、&lt;code>subname&lt;/code>，由于实例属性会屏蔽原型属性中的同名属性，真实使用的是实例属性&lt;code>name&lt;/code>，而原型属性&lt;code>name&lt;/code>会被屏蔽。&lt;/li>
+&lt;/ul>
+&lt;p>这也就是组合继承中效率较低的地方。解决方法见&lt;strong>寄生组合式继承&lt;/strong>。&lt;/p>
+&lt;h2 id="原型式继承">原型式继承&lt;/h2>
+&lt;p>适用情况：只是想让一个对象与另一个对象保持类似的情况下，添加新的属性和方法。&lt;/p>
+&lt;p>不涉及到类型（&lt;code>function&lt;/code>），从头到尾使用的都是对象（&lt;code>var&lt;/code>）。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">// 注意这是个对象，而不是类型构造函数
+// 使用字面量对象、对象实例都可以
+var obj = {
+name: &amp;quot;objname&amp;quot;,
+arrays: [&amp;quot;1&amp;quot;, &amp;quot;2&amp;quot;],
+func: function () {},
+};
+// Object.create()方法的两种参数形式
+var anotherobj1 = Object.create(obj);
+var anotherobj2 = Object.create(obj, {
+name: {
+enumerable: true,
+value: &amp;quot;newname&amp;quot;,
+},
+});
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>Object.create()&lt;/code>方法创建一个新对象，使用现有的对象来提供新创建的对象的&lt;code>__proto__&lt;/code>。&lt;/p>
+&lt;p>&lt;code>Object.create()&lt;/code>方法有两种参数形式：&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>第一个参数：一个作为新对象原型的对象&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>第二个参数（可选）：为新对象定义新属性的对象，形式与 &lt;code>Object.defineProperties()&lt;/code>的第二个参数格式相同&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>特别注意第二个参数中，属性&lt;code>name&lt;/code>的那四种数据属性，如果没有指定&lt;code>enumerable: true&lt;/code>，在使用&lt;code>for..in&lt;/code>和&lt;code>printAllProps&lt;/code>时，属性不会被枚举到。&lt;/p>
+&lt;p>修改&lt;code>anotherobj1&lt;/code>的&lt;code>arrays&lt;/code>的值，如下：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">anotherobj1.arrays.push(&amp;quot;3&amp;quot;);
+printAllProps(anotherobj1); // [ 'name:objname', 'arrays:1,2,3', 'func:function () {}' ]
+printAllProps(anotherobj2); // [ 'name:newname', 'arrays:1,2,3', 'func:function () {}' ]
+&lt;/code>&lt;/pre>
+&lt;p>可以看到，使用原型式继承，同样也会存在使用原型链进行继承时的引用类型值的问题——包含引用类型值的属性始终会共享相应的值。&lt;/p>
+&lt;p>可通过以下代码验证：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">console.log(anotherobj1.arrays === anotherobj2.arrays); // true
+console.log(anotherobj1.func === anotherobj2.func); // true```
+&lt;/code>&lt;/pre>
+&lt;h2 id="寄生式继承">寄生式继承&lt;/h2>
+&lt;p>适用情况：在主要考虑的是对象，而不是自定义类型或构造函数时。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function createAnother(original) {
+// 该Object()函数不是必须，任何返回一个对象的函数都可以
+var clone = Object(original);
+clone.newfunc = function () {};
+return clone;
+}
+var original = {
+name: &amp;quot;originalName&amp;quot;,
+};
+var another = createAnother(original);
+printAllProps(another); // [ 'name:originalName', 'newfunc:function () {}' ]
+&lt;/code>&lt;/pre>
+&lt;p>缺点：与构造函数继承类似地，函数不能复用。&lt;/p>
+&lt;h2 id="寄生组合式继承">寄生组合式继承&lt;/h2>
+&lt;p>优点：高效率——弥补组合继承的不足，只调用一次超类型&lt;code>SuperType&lt;/code>构造函数，避免了在子类型&lt;code>SubType&lt;/code>的原型&lt;code>prototype&lt;/code>上创建不必要的多余的属性和方法。&lt;/p>
+&lt;p>是目前引用类型最理想的继承范式。&lt;/p>
+&lt;p>本质：使用寄生式继承来继承超类型的原型（即只继承了超类型的原型属性，并没有在子类型原型上添加超类型实例属性），然后再将结果指定给子类型的原型。即，将组合继承中第一次调用超类型构造函数的地方进行了替换。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function SuperType(supername) {
+this.name = supername;
+}
+SuperType.prototype.protofunc = function () {};
+function SubType(subname, supername) {
+this.subname = subname;
+SuperType.call(this, supername);
+}
+// 用以下方式替换组合继承中的第一次调用
+// 即，替换掉 SubType.prototype = new SuperType()
+// *************************************
+function inheritPrototype(subType, superType) {
+var prototype = superType.prototype; // 创建原型对象
+prototype.constructor = subType; // 增强对象
+subType.prototype = prototype; // 指定原型对象
+}
+inheritPrototype(SubType, SuperType);
+// *************************************
+SubType.prototype.constructor = SubType;
+var subobj = new SubType(&amp;quot;sub&amp;quot;, &amp;quot;super&amp;quot;);
+printAllProps(subobj); // [ 'subname:sub', 'name:super', 'protofunc:function () {}' ]
+&lt;/code>&lt;/pre>
+&lt;p>为创建的超类型原型副本&lt;code>prototype&lt;/code>添加&lt;code>constructor&lt;/code>属性的目的：弥补因重写而失去的默认的&lt;code>constructor&lt;/code>属性，让&lt;code>prototype&lt;/code>副本有正确的&lt;code>constructor&lt;/code>属性指向。&lt;/p></description></item><item><title>JS 创建对象模式</title><link>/post/js-createobj/</link><pubDate>Sat, 25 Apr 2020 17:06:58 +0800</pubDate><guid>/post/js-createobj/</guid><description>&lt;!-- TOC -->
+&lt;ul>
+&lt;li>
+&lt;a href="#%e5%b7%a5%e5%8e%82%e6%a8%a1%e5%bc%8f">工厂模式&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0%e6%a8%a1%e5%bc%8f">构造函数模式&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%8e%9f%e5%9e%8b%e6%a8%a1%e5%bc%8f">原型模式&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e5%8e%9f%e5%9e%8b%e4%b8%8e%e5%8e%9f%e5%9e%8b%e9%93%be">原型与原型链&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0%e5%8e%9f%e5%9e%8b%e5%92%8c%e5%ae%9e%e4%be%8b%e7%9a%84%e5%85%b3%e7%b3%bb">构造函数、原型和实例的关系&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%8e%9f%e5%9e%8b%e7%9a%84%e5%8a%a8%e6%80%81%e6%80%a7">原型的动态性&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%8e%9f%e5%9e%8b%e6%a8%a1%e5%bc%8f%e7%9a%84%e7%bc%ba%e7%82%b9">原型模式的缺点&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;a href="#%e7%bb%84%e5%90%88%e4%bd%bf%e7%94%a8%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0%e6%a8%a1%e5%bc%8f%e5%92%8c%e5%8e%9f%e5%9e%8b%e6%a8%a1%e5%bc%8f%e7%94%a8%e5%be%97%e6%9c%80%e5%a4%9a">组合使用构造函数模式和原型模式（用得最多）&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%8a%a8%e6%80%81%e5%8e%9f%e5%9e%8b%e6%a8%a1%e5%bc%8f">动态原型模式&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%af%84%e7%94%9f%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0%e6%a8%a1%e5%bc%8f">寄生构造函数模式&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e7%a8%b3%e5%a6%a5%e6%9e%84%e9%80%a0%e5%87%bd%e6%95%b0%e6%a8%a1%e5%bc%8f">稳妥构造函数模式&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;!-- /TOC -->
+&lt;h2 id="工厂模式">工厂模式&lt;/h2>
+&lt;p>本质：用函数封装创建对象的细节。&lt;br>
+特点：&lt;/p>
+&lt;ul>
+&lt;li>显式创建了对象（如&lt;code>Object&lt;/code>）&lt;/li>
+&lt;li>不使用&lt;code>new&lt;/code>&lt;/li>
+&lt;li>有&lt;code>return&lt;/code>语句&lt;/li>
+&lt;li>缺点：没有解决对象识别问题，即怎样知道一个对象的类型。（如代码倒数第二行的&lt;code>false&lt;/code>）&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">function createPerson(name, age) {
+var o = new Object();
+o.name = name;
+o.age = age;
+o.sayName = function () {};
+return o;
+}
+var person = createPerson(&amp;quot;Joker&amp;quot;, 23);
+console.log(person instanceof createPerson); // false
+console.log(person.__proto__); //{}
+&lt;/code>&lt;/pre>
+&lt;h2 id="构造函数模式">构造函数模式&lt;/h2>
+&lt;p>特点：&lt;/p>
+&lt;ul>
+&lt;li>没有显式创建对象&lt;/li>
+&lt;li>直接将属性和方法赋给了&lt;code>this&lt;/code>对象&lt;/li>
+&lt;li>没有&lt;code>return&lt;/code>语句&lt;/li>
+&lt;li>创建新实例需使用&lt;code>new&lt;/code>操作符&lt;/li>
+&lt;li>可以解决工厂模式不能确定对象类型的问题&lt;/li>
+&lt;li>缺点：会导致不同实例中的方法不是同一个&lt;code>Function&lt;/code>实例，导致不同的作用域链和标识符解析。（同一个名为&lt;code>sayName&lt;/code> 的方法在不同实例中是不同 Function 对象）（如代码倒数第三行的&lt;code>false&lt;/code>）&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">function Person(name, age) {
+this.name = name;
+this.age = age;
+this.friends = [&amp;quot;1&amp;quot;, &amp;quot;2&amp;quot;];
+this.sayName = function () {};
+}
+var person1 = new Person(&amp;quot;Joker&amp;quot;, 23);
+var person2 = new Person(&amp;quot;Joker1&amp;quot;, 24);
+person1.friends.push(&amp;quot;3&amp;quot;);
+console.log(person1.friends); //[ '1', '2', '3' ]
+console.log(person2.friends); //[ '1', '2' ]
+console.log(person1.sayName === person2.sayName); //false
+console.log(person1 instanceof Person); //true
+console.log(person1.__proto__); //Person {}
+&lt;/code>&lt;/pre>
+&lt;h2 id="原型模式">原型模式&lt;/h2>
+&lt;h3 id="原型与原型链">原型与原型链&lt;/h3>
+&lt;p>我们创建的每个函数都有一个 prototype 属性，即原型属性。prototype 属性是一个指针，指向一个包含可以由特定类型的所有实例共享的属性和方法的对象。&lt;/p>
+&lt;p>prototype 就是通过调用构造函数而创建的那个对象实例的原型对象，使用原型对象的好处是可以让所有对象实例共享包含的属性和方法。&lt;/p>
+&lt;h3 id="构造函数原型和实例的关系">构造函数、原型和实例的关系&lt;/h3>
+&lt;p>每个构造函数都有一个原型对象，原型对象都包含一个指向构造函数的指针，而实例都包含一个指向原型对象的内部指针。&lt;/p>
+&lt;p>&lt;strong>什么叫让所有对象实例共享包含的属性和方法&lt;/strong>&lt;/p>
+&lt;p>直接在对象实例上定义方法的缺点是，不同对象实例中包含的方法不是同一个 Function 实例——在 ECMAScript 中的函数是对象，每定义一个函数，就是实例化一个对象。以这种方式创建函数，会导致不同的作用域链和标识符解析。&lt;/p>
+&lt;p>而使用原型对象则可以做到让所有对象实例共享包含的属性和方法。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function Person() {}
+Person.prototype={
+name : 'defaultName',
+age = 'defaultAge'
+}
+Person.prototype.sayName = function () {
+console.log(this.name)
+}
+var person1 = new Person()
+var person2 = new Person()
+//使用原型对象的好处，可以让所有对象实例共享它所包含的属性和方法
+console.log(person1.sayName == person2.sayName) // true
+&lt;/code>&lt;/pre>
+&lt;p>&lt;strong>原型链&lt;/strong>&lt;/p>
+&lt;div style="text-align: center;">
+&lt;img src="https://s1.ax1x.com/2020/04/24/JBhO5F.png" alt="原型链图片" width="500"/>
+&lt;/div>
+&lt;p>&lt;strong>有关方法&lt;/strong>&lt;/p>
+&lt;p>&lt;code>ObjectName.prototype.isPrototypeOf(instanceName)&lt;/code>
+实例 instanceName 的原型是否是 ObjectName.prototype。&lt;/p>
+&lt;p>&lt;code>Object.getPrototypeOf(instanceName)&lt;/code>
+获取实例 instanceName 的原型的名称。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">var person = new Person();
+console.log(Person.prototype.isPrototypeOf(person)); // true
+console.log(Object.getPrototypeOf(person) == Person.prototype); //true
+&lt;/code>&lt;/pre>
+&lt;h3 id="原型的动态性">原型的动态性&lt;/h3>
+&lt;p>对原型对象的修改会及时体现在实例上，就算在实例创建以后。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">var person1 = new Person();
+Person.prototype.sayHi = function () {
+console.log(&amp;quot;sayHi&amp;quot;);
+};
+person1.sayHi(); // sayHi
+&lt;/code>&lt;/pre>
+&lt;p>但是，如果重写整个原型对象，情况则会不一样。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">var person2 = new Person();
+Person.prototype = {
+sayName: function () {
+console.log(&amp;quot;sayName&amp;quot;);
+},
+};
+person2.sayName(); // person2.sayName is not a function
+&lt;/code>&lt;/pre>
+&lt;p>原因如下图，初始化 person2 时与原来的 Person.prototype 有联系，重写了 Person.prototype 之后相当于新 new 了一个出来，与原来那个已经不是同一个了。&lt;/p>
+&lt;div style="text-align: center;">
+&lt;img src="https://s1.ax1x.com/2020/04/25/JyCzT0.png" alt="原型链图片" width="700"/>
+&lt;/div>
+&lt;p>在此之后，如果再新建对象实例，则会与新 new 的 prototype 建立联系，会拥有新 prototype 上面的属性，但不会拥有原 prototype 上的属性。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">var person3 = new Person();
+console.log(person3.name); // undefined
+person3.sayName(); // sayName
+&lt;/code>&lt;/pre>
+&lt;div style="text-align: center;">
+&lt;img src="https://s1.ax1x.com/2020/04/25/JyCxwq.png" alt="原型链图片" width="700"/>
+&lt;/div>
+&lt;h3 id="原型模式的缺点">原型模式的缺点&lt;/h3>
+&lt;p>本质是原型中的所有属性被很多实例共享的问题。对于是基本类型值的属性不要紧，但是对于引用类型属性，更改一个实例上的该属性值，会导致所有实例中的该属性值都被更改——因为改引用类型值是存在于对象原型 Prototype 上的，而不是对象实例中。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function Person() {}
+Person.prototype = {
+arrays: [&amp;quot;1&amp;quot;, &amp;quot;2&amp;quot;],
+};
+var person1 = new Person();
+var person2 = new Person();
+person1.arrays.push(&amp;quot;3&amp;quot;);
+console.log(person1.arrays); // [ '1', '2', '3' ]
+console.log(person2.arrays); // [ '1', '2', '3' ]
+&lt;/code>&lt;/pre>
+&lt;p>因此，很少单独使用原型模式。&lt;/p>
+&lt;h2 id="组合使用构造函数模式和原型模式用得最多">组合使用构造函数模式和原型模式（用得最多）&lt;/h2>
+&lt;p>为解决上述问题，组合使用构造函数模式与原型模式。&lt;/p>
+&lt;p>优点：构造函数模式用于定义实例，原型模式用于定义方法和共享的属性。每个实例都会有自己的一份实例属性的副本，又共享着对方法的引用，最大限度的节省了内存。这种混成模式还支持向构造函数传递参数。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">// 1. 构造函数模式
+function Person(name, age) {
+this.name = name;
+this.age = age;
+this.friends = [&amp;quot;A&amp;quot;, &amp;quot;B&amp;quot;];
+}
+// 2. 原型模式
+Person.prototype = {
+constructor: Person, //会让constructor变为可枚举的属性
+sayName: function () {
+console.log(this.name);
+},
+};
+var person3 = new Person(&amp;quot;Joker&amp;quot;, 23);
+var person4 = new Person(&amp;quot;Rekoj&amp;quot;, 32);
+// 共用方法（通过原型定义）
+// 但引用类型的属性不会相互干扰（通过构造函数模式定义）
+person3.friends.push(&amp;quot;fox&amp;quot;);
+console.log(person3.friends); // [ 'A', 'B', 'fox' ]
+console.log(person4.friends); // [ 'A', 'B' ]
+console.log(person3.friends === person4.friends); // false
+console.log(person3.sayName === person4.sayName); //true
+&lt;/code>&lt;/pre>
+&lt;p>其中，为&lt;code>Person.prototype&lt;/code>添加&lt;code>constructor&lt;/code>属性的目的：弥补因重写原型而失去的默认的&lt;code>constructor&lt;/code>属性。添加&lt;code>constructor&lt;/code>属性的操作会使&lt;code>constructor&lt;/code>变为可枚举的属性。&lt;/p>
+&lt;h2 id="动态原型模式">动态原型模式&lt;/h2>
+&lt;p>原理跟组合使用构造函数模式和原型模式一样，但是把原型定义操作封装在了构造函数中。本质是通过构造函数初始化原型。&lt;/p>
+&lt;p>在构造函数中的 if 语句是为了判断是否在该对象上定义了&lt;code>sayName&lt;/code>的方法——也就是说，当&lt;code>Person&lt;/code>的原型上还未定义&lt;code>sayName&lt;/code>方法时（如第一次执行&lt;code>new Person(...)&lt;/code>语句时），&lt;code>if&lt;/code>语句会执行，即进行原型的初始化；一旦 Person 的原型被初始化过（如第二次执行&lt;code>new Person(...)&lt;/code>语句时），根据原型的动态性，&lt;code>sayName&lt;/code>已被定义，不会再进入 if 语句中。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function Person(name, age, job) {
+this.name = name;
+this.age = age;
+this.friends = [&amp;quot;A&amp;quot;, &amp;quot;B&amp;quot;];
+if (typeof this.sayName != &amp;quot;function&amp;quot;) {
+// !important
+Person2.prototype.sayName = function () {
+console.log(this.name);
+};
+}
+}
+var person3 = new Person(&amp;quot;Joker&amp;quot;, 23, &amp;quot;tricker&amp;quot;);
+var person4 = new Person(&amp;quot;Rekoj&amp;quot;, 32, &amp;quot;rekcirt&amp;quot;);
+person3.friends.push(&amp;quot;fox&amp;quot;);
+console.log(person3.friends);
+console.log(person4.friends);
+console.log(person3.friends === person4.friends);
+console.log(person3.sayName === person4.sayName);
+&lt;/code>&lt;/pre>
+&lt;p>且如果原型上需要定义多个方法和属性，也只需要一个&lt;code>if&lt;/code>语句判断，选其中一个属性或方法判断即可。&lt;/p>
+&lt;p>要特别注意的是，&lt;code>if&lt;/code>语句中的&lt;code>Person.prototype&lt;/code>不能使用对象字面量重写原型，原因之前说过，会切断现有实例与新原型之间的联系。&lt;/p>
+&lt;h2 id="寄生构造函数模式">寄生构造函数模式&lt;/h2>
+&lt;p>使用情况：如，想创建一个具有额外方法的特殊数组，由于不能直接写修改 Array 构造函数，因此可以使用这个模式。&lt;/p>
+&lt;p>特点：&lt;/p>
+&lt;ul>
+&lt;li>不能依赖 instanceof 操作符来确定对象类型（如下面的例子，array 是 instanceof Array，但不是 SpecialArray）&lt;/li>
+&lt;li>使用&lt;code>new&lt;/code>操作符&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">function SpecialArray() {
+var values = new Array();
+values.push.apply(values, arguments);
+values.toSpecialString = function () {
+return this.join(&amp;quot;+&amp;quot;);
+};
+return values;
+}
+var array = new SpecialArray(&amp;quot;a&amp;quot;, &amp;quot;b&amp;quot;, &amp;quot;c&amp;quot;);
+console.log(array.toSpecialString()); // a+b+c
+console.log(array instanceof SpecialArray); // false
+console.log(array.__proto__); // []
+console.log(array instanceof Array); // true
+&lt;/code>&lt;/pre>
+&lt;h2 id="稳妥构造函数模式">稳妥构造函数模式&lt;/h2>
+&lt;p>特点：&lt;/p>
+&lt;ul>
+&lt;li>适用于一些安全的环境中（如会禁止使用&lt;code>this&lt;/code>和&lt;code>new&lt;/code>），或防止数据被其它应用程序改动（如只允许通过方法访问到属性值）&lt;/li>
+&lt;li>新创建对象的实例方法不使用&lt;code>this&lt;/code>&lt;/li>
+&lt;li>不适用&lt;code>new&lt;/code>操作符&lt;/li>
+&lt;li>不能依赖 instanceof 操作符来确定对象类型（跟寄生构造函数模式类似）&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">function Person(name, age) {
+var o = new Object();
+o.sayName = function () {
+console.log(name);
+};
+return o;
+}
+var person = Person(&amp;quot;Joker&amp;quot;, 23);
+console.log(person.name); //undefined
+person.sayName(); //Joker
+&lt;/code>&lt;/pre></description></item></channel></rss>
