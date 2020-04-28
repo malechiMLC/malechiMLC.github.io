@@ -1,4 +1,192 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC NOTES</title><link>/zh/post/</link><atom:link href="/zh/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><lastBuildDate>Mon, 27 Apr 2020 20:34:45 +0800</lastBuildDate><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/zh/post/</link></image><item><title>Js Function</title><link>/zh/post/js-function/</link><pubDate>Mon, 27 Apr 2020 20:34:45 +0800</pubDate><guid>/zh/post/js-function/</guid><description>&lt;!-- TOC -->
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC NOTES</title><link>/zh/post/</link><atom:link href="/zh/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><lastBuildDate>Tue, 28 Apr 2020 23:22:42 +0800</lastBuildDate><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/zh/post/</link></image><item><title>Js Properties</title><link>/zh/post/js-properties/</link><pubDate>Tue, 28 Apr 2020 23:22:42 +0800</pubDate><guid>/zh/post/js-properties/</guid><description>&lt;!-- TOC -->
+&lt;ul>
+&lt;li>
+&lt;a href="#%e5%b1%9e%e6%80%a7%e7%b1%bb%e5%9e%8b">属性类型&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e6%95%b0%e6%8d%ae%e5%b1%9e%e6%80%a7">数据属性&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e8%ae%bf%e9%97%ae%e5%99%a8%e5%b1%9e%e6%80%a7">访问器属性&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e8%af%bb%e5%8f%96%e5%b1%9e%e6%80%a7%e7%9a%84%e7%89%b9%e6%80%a7">读取属性的特性&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%88%a4%e6%96%ad%e6%98%af%e5%90%a6%e5%8c%85%e5%90%ab%e6%9f%90%e5%b1%9e%e6%80%a7%e5%92%8c-in-%e6%93%8d%e4%bd%9c%e7%ac%a6">判断是否包含某属性和 in 操作符&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e8%8e%b7%e5%8f%96%e5%b1%9e%e6%80%a7">获取属性&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#for-in%e6%89%80%e6%9c%89%e6%9e%9a%e4%b8%be%e5%b1%9e%e6%80%a7">for-in——所有枚举属性&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#objectkeys%e5%8f%af%e6%9e%9a%e4%b8%be%e5%ae%9e%e4%be%8b%e5%b1%9e%e6%80%a7%e7%9a%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%95%b0%e7%bb%84">Object.keys()——可枚举实例属性的字符串数组&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#objectgetownpropertynames%e6%89%80%e6%9c%89%e5%ae%9e%e4%be%8b%e5%b1%9e%e6%80%a7%e7%9a%84%e5%ad%97%e7%ac%a6%e4%b8%b2%e6%95%b0%e7%bb%84">Object.getOwnPropertyNames()——所有实例属性的字符串数组&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e6%b3%a8%e6%84%8f-consolelog">注意 console.log()&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- /TOC -->
+&lt;h1 id="属性类型">属性类型&lt;/h1>
+&lt;h2 id="数据属性">数据属性&lt;/h2>
+&lt;p>&lt;code>[[Configurable]]&lt;/code>：表示能否通过 delete 删除属性，能否修改属性特性，能否把属性修改为访问器属性。
+&lt;code>[[Enumerable]]&lt;/code>：表示能否通过 for-in 循环返回属性。
+&lt;code>[[Writable]]&lt;/code>：表示是否能修改属性值。
+&lt;code>[[Value]]&lt;/code>：包含这个属性的数据值，默认值为&lt;code>undefined&lt;/code>。&lt;/p>
+&lt;p>当直接在对象上定义属性时（即&lt;code>var Person={name:'Joker'}&lt;/code>），前三个属性都默认为&lt;code>true&lt;/code>。&lt;/p>
+&lt;p>&lt;strong>修改属性默认的特性的方法——Object.defineProperty()&lt;/strong>&lt;/p>
+&lt;p>在调用 Object.defineProperty()方法创建一个新的属性时，如果不指定&lt;code>considerable&lt;/code>，&lt;code>innumerable&lt;/code>和&lt;code>writeable&lt;/code>特性的默认值都是&lt;code>false&lt;/code>。当只是修改一个已定义的属性的特性时，无此限制。&lt;/p>
+&lt;p>一旦把属性的&lt;code>considerable&lt;/code>定义为&lt;code>false&lt;/code>，即，把属性定义为不可配置的，则不能变回可配置了，且修改除&lt;code>writable&lt;/code>之外的属性都会发生错误。&lt;/p>
+&lt;pre>&lt;code>var Person = {}
+Object.defineProperty(person, 'name', {
+value: 'Joker', //如果不指定那三个属性，则都默认为false
+})
+// 'use strict' //声明为严格模式
+person.name = 'rewrite' // 在严格模式下会报错，在非严格模式下下会忽略该语句
+&lt;/code>&lt;/pre>
+&lt;p>在非严格模式下，修改已设置&lt;code>writable&lt;/code>为&lt;code>false&lt;/code>的属性的值，赋值操作将会被忽略；在严格模式下，将抛出错误。&lt;/p>
+&lt;pre>&lt;code>var person = {
+name: 'defaultname',
+}
+Object.defineProperty(person, 'name', {
+writable: false, //设置name属性为不可修改
+})
+person.name = 'rewrite1' //重写失败，在非严格模式下会忽略，严格模式下会报错
+console.log(person1.name) //defaultname
+Object.defineProperty(person1, 'name', {
+writable: true, //重新设置name属性为可修改
+})
+person1.name = 'rewrite2' //可以修改
+console.log(person1.name) //rewrite2
+&lt;/code>&lt;/pre>
+&lt;h2 id="访问器属性">访问器属性&lt;/h2>
+&lt;p>包含&lt;code>getter&lt;/code>和&lt;code>setter&lt;/code>函数。在读取访问器属性时，会调用&lt;code>get&lt;/code>函数负责返回有效的值；在写入访问期属性时会调用&lt;code>set&lt;/code>函数并传入新值，负责如何处理数据。
+通过&lt;code>Object.defineProperty()&lt;/code>来定义。
+使用访问器属性的常见方式是，设置一个属性的值会导致其他属性发生变化，如下：&lt;/p>
+&lt;pre>&lt;code>var book = {
+year: 2000,
+edition: 1,
+}
+Object.defineProperty(book, 'year', {
+get: function () {
+return this.year
+},
+set: function (newValue) {
+if (newValue &amp;gt;= 2000) { // 改变year的同时改变edition
+this.edition = Math.floor((newValue - 2000) / 3) + 1
+}
+},
+})
+book.year = 2001
+console.log(book.edition) // 1
+book.year = 2010
+console.log(book.edition) // 4
+&lt;/code>&lt;/pre>
+&lt;p>只指定&lt;code>getter&lt;/code>意味着属性不可写，非严格模式下，尝试写入会被忽略，严格模式下，会抛出错误。
+只指定&lt;code>setter&lt;/code>意味着属性不可读，非严格模式下，会返回&lt;code>undefined&lt;/code>，严格模式下，会抛出错误。&lt;/p>
+&lt;h2 id="读取属性的特性">读取属性的特性&lt;/h2>
+&lt;pre>&lt;code>var person = {}
+Object.defineProperty(person, 'name', {
+enumerable: false,
+value: 'name',
+})
+// 读取属性的特性
+var descriptor = Object.getOwnPropertyDescriptor(person, 'name')
+console.log(descriptor.enumerable) //false
+console.log(descriptor.value) //name
+&lt;/code>&lt;/pre>
+&lt;h2 id="判断是否包含某属性和-in-操作符">判断是否包含某属性和 in 操作符&lt;/h2>
+&lt;p>&lt;code>.hasOwnProperty()&lt;/code>用于检测一个属性存在于实例中，还是在原型中。当存在于实例中时返回 true。&lt;/p>
+&lt;pre>&lt;code>function Person() {}
+Person.prototype.name = 'defaultName' //添加一个原型属性
+person.job = 'instanceJob' //添加一个实例属性
+console.log(person.hasOwnProperty('job')) // true
+console.log(person.hasOwnProperty('name')) // false
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>in操作符&lt;/code>：检测属性是否在实例或原型中，只要包括，就为 true。&lt;/p>
+&lt;pre>&lt;code>console.log('name' in person1) // true
+console.log('job' in person1) // true
+&lt;/code>&lt;/pre>
+&lt;p>&lt;strong>结合 in 操作符和 hasOwnProperty()可以判断一个属性是实例属性还是原型属性&lt;/strong>&lt;/p>
+&lt;pre>&lt;code>function hasPrototypeProperty(obj, name) {
+return !obj.hasOwnProperty(name) &amp;amp;&amp;amp; name in obj
+}
+console.log(hasPrototypeProperty(person, 'name')) // true
+console.log(hasPrototypeProperty(person, 'job')) // false
+&lt;/code>&lt;/pre>
+&lt;h2 id="获取属性">获取属性&lt;/h2>
+&lt;h3 id="for-in所有枚举属性">for-in——所有枚举属性&lt;/h3>
+&lt;pre>&lt;code>// 现在person实例有实例属性name、sayName，原型属性job、sayJob
+for (let prop in person1) {
+console.log(prop) //所有实例属性、原型属性
+}
+&lt;/code>&lt;/pre>
+&lt;p>注意&lt;code>let prop in person1&lt;/code>中的 prop 的类型是&lt;code>String&lt;/code>，因此如果要通过&lt;code>prop&lt;/code>访问&lt;code>person1&lt;/code>中的属性的值，应使用&lt;code>person1[pop]&lt;/code>，而不能使用&lt;code>person1.prop&lt;/code>。&lt;/p>
+&lt;p>访问 js 对象属性值&lt;code>[]&lt;/code>和&lt;code>.&lt;/code>的区别：&lt;code>[]&lt;/code>中接受的是字符串，如&lt;code>person1[&amp;quot;name&amp;quot;]&lt;/code>，而&lt;code>.&lt;/code>接受的是直接的属性名，如&lt;code>person1.name&lt;/code>。&lt;/p>
+&lt;p>被设置为不可枚举，即 emunerable 为 false 的属性在 for..in 中不会被访问到。&lt;/p>
+&lt;pre>&lt;code>function Person() {}
+//定义原型属性，其中一个在后面被设置为不可枚举
+Person.prototype.protoNameEmun = 'protoNameEmun'
+Person.prototype.protoNameUnemun = 'protoNameUnemun'
+Person.prototype.protoSayName = function () {}
+var person = new Person()
+//定义实例属性，其中一个在后面被设置为不可枚举
+person.instanceNameEmun = 'instanceNameEmun'
+person.instanceNameUnemun = 'instanceNameUnemun'
+person.instanceSayName = function () {}
+// 定义为不可枚举
+Object.defineProperties(person, {
+protoNameUnemun: {
+enumerable: false,
+},
+instanceNameUnemun: {
+enumerable: false,
+},
+})
+// 输出实例属性、原型属性中所有可枚举的，不可枚举的不输出
+// 输出：instanceNameEmun、instanceSayName、protoNameEmun、protoSayName
+for (let prop in person) {
+console.log(prop)
+}
+&lt;/code>&lt;/pre>
+&lt;h3 id="objectkeys可枚举实例属性的字符串数组">Object.keys()——可枚举实例属性的字符串数组&lt;/h3>
+&lt;p>&lt;code>Object.keys()&lt;/code>方法这个方法接收一个对象作为参数，返回一个包含所有&lt;strong>可枚举的实例属性&lt;/strong>的&lt;strong>字符串数组&lt;/strong>。
+同样，对于上述的例子：&lt;/p>
+&lt;pre>&lt;code>var key1 = Object.keys(Person.prototype)
+var key2 = Object.keys(person)
+console.log(key1) //[ 'protoNameEmun', 'protoNameUnemun', 'protoSayName' ]
+console.log(key2) //[ 'instanceNameEmun', 'instanceSayName' ]
+&lt;/code>&lt;/pre>
+&lt;h3 id="objectgetownpropertynames所有实例属性的字符串数组">Object.getOwnPropertyNames()——所有实例属性的字符串数组&lt;/h3>
+&lt;p>返回包含所有实例属性（不论是否可以枚举）的字符串数组。&lt;/p>
+&lt;pre>&lt;code>var names1 = Object.getOwnPropertyNames(Person.prototype)
+var names2 = Object.getOwnPropertyNames(person)
+console.log(names1)
+// [ 'constructor', 'protoNameEmun', 'protoNameUnemun', 'protoSayName' ]
+console.log(names2)
+// [ 'instanceNameEmun', 'instanceNameUnemun', 'instanceSayName', 'protoNameUnemun' ]
+&lt;/code>&lt;/pre>
+&lt;p>注意在 name1 中包含了不可枚举属性 constructor，正说明了“不论是否可以枚举”这一点。&lt;/p>
+&lt;h3 id="注意-consolelog">注意 console.log()&lt;/h3>
+&lt;p>在 vscode 中 console.log(obj)出来的对象，显示的只有实例属性。
+假设&lt;code>SuperType&lt;/code>中包括实例属性和方法&lt;code>name, sayName&lt;/code>，包括原型方法&lt;code>sayProto&lt;/code>，则：&lt;/p>
+&lt;pre>&lt;code>// 自定义一个能打印出所有实例属性、原型属性的方法，使用for..in
+function printAllProps(obj) {
+let array = []
+for (let prop in obj) {
+array.push(prop)
+}
+console.log(array)
+}
+var obj = new SuperType('Joker')
+console.log(obj)
+printAllProps(obj)
+&lt;/code>&lt;/pre>
+&lt;p>最后两行在 vscode 中打印出来的内容分别为：
+&lt;code>SuperType { name: 'Joker', sayName: [Function] }&lt;/code>
+&lt;code>[ 'name', 'sayName', 'sayProto' ]&lt;/code>&lt;/p>
+&lt;p>可以看到，原型上的&lt;code>sayProto&lt;/code>方法并没有在&lt;code>console.log&lt;/code>中打印出来。&lt;/p></description></item><item><title>Js Function</title><link>/zh/post/js-function/</link><pubDate>Mon, 27 Apr 2020 20:34:45 +0800</pubDate><guid>/zh/post/js-function/</guid><description>&lt;!-- TOC -->
 &lt;ul>
 &lt;li>
 &lt;a href="#%e5%ae%9a%e4%b9%89%e5%87%bd%e6%95%b0">定义函数&lt;/a>
