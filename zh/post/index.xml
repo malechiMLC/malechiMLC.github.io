@@ -1,4 +1,206 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC NOTES</title><link>/zh/post/</link><atom:link href="/zh/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><lastBuildDate>Sat, 25 Apr 2020 21:22:22 +0800</lastBuildDate><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/zh/post/</link></image><item><title>JS 继承方法详解</title><link>/zh/post/js-inherit/</link><pubDate>Sat, 25 Apr 2020 21:22:22 +0800</pubDate><guid>/zh/post/js-inherit/</guid><description>&lt;!-- TOC -->
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Posts | MLC NOTES</title><link>/zh/post/</link><atom:link href="/zh/post/index.xml" rel="self" type="application/rss+xml"/><description>Posts</description><generator>Source Themes Academic (https://sourcethemes.com/academic/)</generator><language>zh-Hans</language><copyright>© 2020 Ruiqi Ma</copyright><lastBuildDate>Mon, 27 Apr 2020 20:34:45 +0800</lastBuildDate><image><url>/images/icon_hufe282a50f3886d4604387e18d88a80ad_43066_512x512_fill_lanczos_center_2.png</url><title>Posts</title><link>/zh/post/</link></image><item><title>Js Function</title><link>/zh/post/js-function/</link><pubDate>Mon, 27 Apr 2020 20:34:45 +0800</pubDate><guid>/zh/post/js-function/</guid><description>&lt;!-- TOC -->
+&lt;ul>
+&lt;li>
+&lt;a href="#%e5%ae%9a%e4%b9%89%e5%87%bd%e6%95%b0">定义函数&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e5%87%bd%e6%95%b0%e5%a3%b0%e6%98%8e">函数声明&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e5%87%bd%e6%95%b0%e8%a1%a8%e8%be%be%e5%bc%8f">函数表达式&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>
+&lt;a href="#%e5%87%bd%e6%95%b0%e7%9a%84%e4%bd%bf%e7%94%a8">函数的使用&lt;/a>
+&lt;ul>
+&lt;li>
+&lt;a href="#%e4%bd%9c%e4%b8%ba%e5%85%b6%e4%bb%96%e5%87%bd%e6%95%b0%e5%8f%82%e6%95%b0">作为其他函数参数&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e4%bd%9c%e4%b8%ba%e5%85%b6%e4%bb%96%e5%87%bd%e6%95%b0%e7%9a%84%e8%bf%94%e5%9b%9e%e5%80%bc">作为其他函数的返回值&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e9%80%92%e5%bd%92">递归&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e6%89%a7%e8%a1%8c%e7%8e%af%e5%a2%83%e4%bd%9c%e7%94%a8%e5%9f%9f%e9%93%be%e6%b4%bb%e5%8a%a8%e5%af%b9%e8%b1%a1">执行环境、作用域链、活动对象&lt;/a>&lt;/li>
+&lt;li>
+&lt;a href="#%e9%97%ad%e5%8c%85">闭包&lt;/a>&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+&lt;!-- /TOC -->
+&lt;h2 id="定义函数">定义函数&lt;/h2>
+&lt;p>定义函数有两种方式，总结这两种定义函数的特性和适应情况如下。&lt;/p>
+&lt;h3 id="函数声明">函数声明&lt;/h3>
+&lt;pre>&lt;code class="language-javascript">function func() {}
+&lt;/code>&lt;/pre>
+&lt;p>特征：&lt;/p>
+&lt;ul>
+&lt;li>函数声明提升（可以把函数声明放在调用它的语句后面）&lt;/li>
+&lt;/ul>
+&lt;h3 id="函数表达式">函数表达式&lt;/h3>
+&lt;pre>&lt;code class="language-javascript">var func = function () {};
+&lt;/code>&lt;/pre>
+&lt;p>特征：&lt;/p>
+&lt;ul>
+&lt;li>此时创建的是匿名函数&lt;/li>
+&lt;li>必须在使用前赋值（即不存在提升）&lt;/li>
+&lt;/ul>
+&lt;p>适合使用 &lt;em>函数表达式&lt;/em> 的情况：&lt;/p>
+&lt;ul>
+&lt;li>根据&lt;code>condition&lt;/code>赋值不同函数（如&lt;code>if-else&lt;/code>）&lt;/li>
+&lt;/ul>
+&lt;pre>&lt;code class="language-javascript">var condition_func;
+var condition = false;
+if (condition) {
+condition_func = function () {
+console.log(&amp;quot;in if&amp;quot;);
+};
+} else {
+condition_func = function () {
+console.log(&amp;quot;in else&amp;quot;);
+};
+}
+condition_func(); // in else
+&lt;/code>&lt;/pre>
+&lt;h2 id="函数的使用">函数的使用&lt;/h2>
+&lt;h3 id="作为其他函数参数">作为其他函数参数&lt;/h3>
+&lt;p>逆序排列数组，将&lt;code>reverse&lt;/code>函数作为参数传递给&lt;code>sort()&lt;/code>。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function reverse(a, b) {
+return b - a;
+}
+var arr = new Array(&amp;quot;10&amp;quot;, &amp;quot;5&amp;quot;, &amp;quot;40&amp;quot;);
+console.log(arr.sort(reverse));
+&lt;/code>&lt;/pre>
+&lt;p>输出结果为，验证正确：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">[&amp;quot;40&amp;quot;, &amp;quot;10&amp;quot;, &amp;quot;5&amp;quot;];
+&lt;/code>&lt;/pre>
+&lt;h3 id="作为其他函数的返回值">作为其他函数的返回值&lt;/h3>
+&lt;p>对象数组，按照其中某一属性值排序。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function sortByProp(propertyname) {
+return function (obj1, obj2) {
+let val1 = obj1[propertyname];
+let val2 = obj2[propertyname];
+return val1 - val2;
+};
+}
+var persons = [
+{
+name: &amp;quot;Jake&amp;quot;,
+age: 28,
+},
+{
+name: &amp;quot;Maria&amp;quot;,
+age: 23,
+},
+{
+name: &amp;quot;Jimmy&amp;quot;,
+age: 15,
+},
+];
+console.log(persons.sort(sortByProp(&amp;quot;age&amp;quot;)));
+&lt;/code>&lt;/pre>
+&lt;p>输出结果为，验证正确：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">[
+{ name: &amp;quot;Jimmy&amp;quot;, age: 15 },
+{ name: &amp;quot;Maria&amp;quot;, age: 23 },
+{ name: &amp;quot;Jake&amp;quot;, age: 28 },
+];
+&lt;/code>&lt;/pre>
+&lt;h3 id="递归">递归&lt;/h3>
+&lt;p>一般递归形式如下：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function func() {
+func();
+}
+&lt;/code>&lt;/pre>
+&lt;p>但此时存在一个可能的问题，如果想把函数保存在一个变量中，通过变量调用时就会出现问题。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function func() {
+// do sth ...
+func();
+}
+var anotherfunc = func;
+func = null; // 只有anotherfunc一个指向函数的引用
+anotherfunc(); // 出错
+&lt;/code>&lt;/pre>
+&lt;p>原因：在执行函数时会包括执行名为&lt;code>func&lt;/code>的函数，但此时&lt;code>func&lt;/code>已被解引用。&lt;/p>
+&lt;p>解决方案：使用&lt;code>arguments.callee&lt;/code>代替函数名——一个指向正在执行的函数的指针，适合于实现函数的递归调用。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">function func() {
+// do sth ...
+arguments.callee(); // ! important
+}
+var anotherfunc = func;
+func = null;
+anotherfunc();
+&lt;/code>&lt;/pre>
+&lt;h3 id="执行环境作用域链活动对象">执行环境、作用域链、活动对象&lt;/h3>
+&lt;p>&lt;strong>变量对象和活动对象&lt;/strong>&lt;/p>
+&lt;p>变量对象（VO）：与执行上下文概念对应，包含了执行上下文中的所有变量、函数以及当前执行上下文函数的参数列表。&lt;/p>
+&lt;p>活动对象（AO）：进入到执行阶段之后，变量对象转变成了活动对象。&lt;/p>
+&lt;p>&lt;strong>作用域链&lt;/strong>&lt;/p>
+&lt;p>本质上是一个指向变量对象的指针列表，只引用但不实际包含变量对象。&lt;/p>
+&lt;p>在函数中访问一个变量时，会从作用域中搜索具有相应名字的变量&lt;/p>
+&lt;p>&lt;strong>作用域链是怎么创建的&lt;/strong>&lt;/p>
+&lt;p>在函数被创建时，首先创建一个执行环境、以及相应的作用域链。再使用&lt;code>arguments&lt;/code>和其他命名参数的值来初始化函数的活动对象。&lt;/p>
+&lt;p>在函数执行过程中，需要在作用域中查找变量。从作用域链链首开始寻找。&lt;/p>
+&lt;p>&lt;strong>先回顾一下变量提升、函数声明提升&lt;/strong>&lt;/p>
+&lt;p>变量提升：变量的定义提升（注意块级作用域中，用&lt;code>let&lt;/code>声明的变量不存在变量提升），但赋值不提升。&lt;/p>
+&lt;pre>&lt;code class="language-javascript">console.log(a); // undefined
+var a = 10;
+&lt;/code>&lt;/pre>
+&lt;p>函数声明提升&lt;/p>
+&lt;pre>&lt;code class="language-javascript">f(); // doing sth...
+function f() {
+console.log(&amp;quot;doing sth...&amp;quot;);
+}
+&lt;/code>&lt;/pre>
+&lt;p>综合来看，可以得知一下代码会输出如下结果 &lt;em>（如果不知道为什么，请先回顾一下变量提升和函数声明提升的内容）&lt;/em>：&lt;/p>
+&lt;pre>&lt;code class="language-javascript">a(); // function
+var a = function () {
+console.log(&amp;quot;anonymous&amp;quot;);
+};
+function a() {
+console.log(&amp;quot;function&amp;quot;);
+}
+&lt;/code>&lt;/pre>
+&lt;pre>&lt;code class="language-javascript">var a = function () {
+console.log(&amp;quot;anonymous&amp;quot;);
+};
+function a() {
+console.log(&amp;quot;function&amp;quot;);
+}
+a(); // anonymous
+&lt;/code>&lt;/pre>
+&lt;pre>&lt;code class="language-javascript">var a = &amp;quot;global a&amp;quot;; // 语句1
+function b() {
+console.log(&amp;quot;global b()&amp;quot;);
+}
+function c(a, b) {
+arguments[1](); // 输出：inner b()，可以看出此处的b已经是inner funciton
+b(); // inner b()
+console.log(a); // global a，语句2
+var a = &amp;quot;inner a&amp;quot;;
+function b() {
+console.log(&amp;quot;inner b()&amp;quot;);
+}
+}
+c(a, b); // 每步骤输出见上
+b(); // global b()
+&lt;/code>&lt;/pre>
+&lt;p>有以下关键点：&lt;/p>
+&lt;ul>
+&lt;li>运行到 &lt;em>语句 1&lt;/em> 但还未执行时：&lt;/li>
+&lt;/ul>
+&lt;div style="text-align: center;">
+&lt;img src="https://s1.ax1x.com/2020/04/28/J5uvgf.png" width="350px" alt="global VO">
+&lt;/div>
+&lt;ul>
+&lt;li>进入函数 c 的执行时，内部函数 b 因为函数声明提升，会将参数 b 的值改为指向这个内部函数 b 。&lt;/li>
+&lt;/ul>
+&lt;p>&lt;strong>作用域链是怎样创建的&lt;/strong>&lt;/p>
+&lt;p>在创建&lt;code>c()&lt;/code>函数时，会创建一个预先包含全局变量对象的作用域链，该作用域链会被保存在内部的&lt;code>[[Scope]]&lt;/code>属性中。&lt;/p>
+&lt;p>当调用&lt;code>c()&lt;/code>函数时，会为函数创建一个执行环境，然后复制函数的&lt;code>[[Scope]]&lt;/code>属性中的对象构建起执行环境的作用域链。&lt;/p>
+&lt;p>然后，又有一个活动对象被创建，并推入执行环境作用域链的前端。&lt;/p>
+&lt;h3 id="闭包">闭包&lt;/h3>
+&lt;p>首先要明确&lt;strong>闭包&lt;/strong>和&lt;strong>匿名函数&lt;/strong>的概念。闭包是指有权访问另一个函数作用域中的变量的函数。&lt;em>（划重点：要访问另一个函数作用域中的变量）&lt;/em>&lt;/p>
+&lt;p>&lt;strong>创建方式&lt;/strong>&lt;/p>
+&lt;p>常见方式就是在一个函数内部创建另一个函数。&lt;/p></description></item><item><title>JS 继承方法详解</title><link>/zh/post/js-inherit/</link><pubDate>Sat, 25 Apr 2020 21:22:22 +0800</pubDate><guid>/zh/post/js-inherit/</guid><description>&lt;!-- TOC -->
 &lt;ul>
 &lt;li>
 &lt;a href="#new-%e6%93%8d%e4%bd%9c%e7%9a%84%e5%ae%9e%e7%8e%b0%e5%8e%9f%e7%90%86">new 操作的实现原理&lt;/a>&lt;/li>
